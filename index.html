@@ -38,7 +38,7 @@
   <main class="main">
     <header class="topbar">
       <div><div class="eyebrow">YOUR PREPARATION OS</div><h1 id="pageTitle">Dashboard</h1></div>
-      <div class="top-actions"><span id="today"></span><button id="themeBtn" class="icon-btn">☼</button></div>
+      <div class="top-actions"><span id="today"></span><button id="printWeeklyBtn" class="print-btn">🖨 Weekly A4</button><button id="printDailyBtn" class="print-btn">🗒 Daily Sheet</button><button id="themeBtn" class="icon-btn">☼</button></div>
     </header>
 
     <section id="page-dashboard" class="page active">
@@ -71,6 +71,15 @@
         <div class="panel"><div class="panel-head"><div><h3>7-Day Study Timeline</h3><span>Hours logged</span></div></div><div id="weekChart" class="week-chart"></div></div>
       </div>
 
+      <div class="panel report-panel">
+        <div class="panel-head"><div><h3>Print & Reports</h3><span>Clean A4 sheets for your desk — generated from your saved tracker data.</span></div></div>
+        <div class="report-actions">
+          <button class="primary" id="dashWeeklyBtn">🖨 One-click Weekly Progress Report</button>
+          <button class="ghost" id="dashDailyBtn">🗒 One-click Daily Task Sheet</button>
+        </div>
+        <div class="report-hint">Weekly report = current Monday–Sunday summary. Daily sheet = today's ready-to-print checklist + time plan.</div>
+      </div>
+
       <div class="dashboard-grid">
         <div class="panel"><div class="panel-head"><div><h3>Revision Queue</h3><span>Don't let chapters fade.</span></div><button class="text-btn" data-go="revision">Open →</button></div><div id="dashRevision"></div></div>
         <div class="panel"><div class="panel-head"><div><h3>Backlog & Priority</h3><span>Next things to attack</span></div></div><div id="dashBacklog"></div></div>
@@ -78,7 +87,7 @@
     </section>
 
     <section id="page-planner" class="page">
-      <div class="page-intro"><div><div class="eyebrow">PLAN • EXECUTE • CHECK</div><h2>My Planner</h2><p>Classes, notes, homework, PYQs, revision — everything gets a checkbox.</p></div><button class="primary" id="addTaskBtn">+ Add Task</button></div>
+      <div class="page-intro"><div><div class="eyebrow">PLAN • EXECUTE • CHECK</div><h2>My Planner</h2><p>Classes, notes, homework, PYQs, revision — everything gets a checkbox.</p></div><div class="button-row"><button class="ghost" id="plannerDailyBtn">🗒 Print Daily Task Sheet</button><button class="primary" id="addTaskBtn">+ Add Task</button></div></div>
       <div class="planner-layout">
         <div class="panel"><div class="panel-head"><div><h3>Today's Tasks</h3><span id="taskSummary"></span></div><select id="taskFilter"><option value="all">All</option><option value="pending">Pending</option><option value="done">Completed</option></select></div><div id="taskList"></div></div>
         <div class="panel">
@@ -169,6 +178,8 @@
   </div>
 </div>
 
+<div id="printReport" class="print-report"></div>
+<div id="dailyPrintReport" class="print-report"></div>
 <div id="toast"></div>
 <div id="modal" class="modal-overlay"><div class="modal-card"><div class="modal-head"><h3 id="modalTitle">Add</h3><button id="closeModal" class="icon-btn">×</button></div><div id="modalBody"></div></div></div>
 <script src="app.js"></script>

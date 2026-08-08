@@ -151,7 +151,7 @@ function closeModal(){$("#modal").classList.remove("open")}
 $("#closeModal").onclick=closeModal;$("#modal").onclick=e=>{if(e.target.id==="modal")closeModal()};
 document.addEventListener("submit",e=>{
  if(e.target.id==="chapterForm"){e.preventDefault();data.chapters.push({id:uid(),subject:$("#cs").value,name:$("#cn").value,status:"Not Started",priority:$("#cp").value});closeModal();save();toast("Chapter added")}
- if(e.target.id==="pyqForm"){e.preventDefault();data.pyqs.push({id:uid(),subject:$("#ps").value,chapter:$("#pc").value,year:$("#py").value,level:$("#pl").value,solved:Number($("#pq").value),correct:Number($("#pcr").value)});closeModal();save();toast("PYQ record saved")}
+ if(e.target.id==="pyqForm"){e.preventDefault();data.pyqs.push({id:uid(),date:todayISO(),subject:$("#ps").value,chapter:$("#pc").value,year:$("#py").value,level:$("#pl").value,solved:Number($("#pq").value),correct:Number($("#pcr").value)});closeModal();save();toast("PYQ record saved")}
  if(e.target.id==="testForm"){e.preventDefault();let s=Number($("#ts").value),t=Number($("#tt").value);data.tests.push({id:uid(),name:$("#tn").value,date:$("#td").value,exam:$("#te").value,score:s,total:t,accuracy:pct(s,t)});closeModal();save();toast("Mock test logged")}
  if(e.target.id==="revForm"){e.preventDefault();data.revisions.push({id:uid(),subject:$("#rs").value,chapter:$("#rc").value,date:$("#rd").value,done:false});closeModal();save();toast("Revision scheduled")}
  if(e.target.id==="mistakeForm"){e.preventDefault();data.mistakes.push({id:uid(),subject:$("#ms").value,chapter:$("#mc").value,problem:$("#mp").value,reason:$("#mr").value,fix:$("#mf").value});closeModal();save();toast("Mistake added")}
@@ -161,30 +161,102 @@ document.addEventListener("submit",e=>{
 $("#exportBtn").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}));a.download="jee-tracker-backup.json";a.click();toast("Backup downloaded")};
 $("#importBtn").onclick=()=>$("#importFile").click();$("#importFile").onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{data=JSON.parse(r.result);save();toast("Backup imported")}catch{toast("Invalid backup")}};r.readAsText(f)};
 
-function buildPrintReport(){
+function isoDateLocal(d){
+ const x=new Date(d); x.setHours(0,0,0,0);
+ return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}-${String(x.getDate()).padStart(2,"0")}`;
+}
+function datePlus(iso,days){const d=new Date(iso+"T00:00:00");d.setDate(d.getDate()+days);return isoDateLocal(d)}
+function weekStartISO(){const d=new Date();d.setHours(0,0,0,0);const day=d.getDay()||7;d.setDate(d.getDate()-(day-1));return isoDateLocal(d)}
+function currentWeek(){const start=weekStartISO();return Array.from({length:7},(_,i)=>datePlus(start,i))}
+function within(iso,start,end){return iso>=start&&iso<=end}
+function reportHeader(title,subtitle){return `<div class="print-brand"><img src="logo.png" alt="Naresh Kuntal"><div><div class="print-kicker">JEE TRACKER • PREPARATION OS</div><h1 class="print-title">${title}</h1><div class="print-subtitle">${subtitle}</div></div></div>`}
+function checkMark(v){return v?"☑":"☐"}
+
+function buildWeeklyReport(){
  ensureChecks();
- const d=data.subjectChecks[todayISO()];
- const rows=CHECK_SUBJECTS.map(s=>`<tr><td><b>${esc(s)}</b></td>${CHECK_ITEMS.map(k=>`<td style="text-align:center">${d[s][k]?"☑":"☐"}</td>`).join("")}</tr>`).join("");
- const chaptersDone=data.chapters.filter(c=>["Done","Revised","Mastered"].includes(c.status)).length;
- const totalHours=data.daily.reduce((n,x)=>n+Number(x.hours||0),0);
- const recent=data.tests.slice(-8).reverse();
- const tests=recent.length?`<table class="print-table"><tr><th>Test</th><th>Date</th><th>Exam</th><th>Score</th><th>Accuracy</th></tr>${recent.map(t=>`<tr><td>${esc(t.name)}</td><td>${esc(t.date)}</td><td>${esc(t.exam)}</td><td>${t.score}/${t.total}</td><td>${t.accuracy}%</td></tr>`).join("")}</table>`:"<p>No mock tests logged yet.</p>";
- const pending=data.chapters.filter(c=>c.priority==="High" && c.status!=="Mastered").slice(0,12);
- const backlog=pending.length?`<ul>${pending.map(c=>`<li>${esc(c.subject)} — ${esc(c.name)} (${esc(c.status)})</li>`).join("")}</ul>`:"<p>No high-priority backlog.</p>";
- $("#printReport").innerHTML=`<h1 class="print-title">JEE Preparation Report</h1>
- <div class="print-subtitle"><b>${esc(data.profile.name||"Student")}</b> • ${esc(data.profile.exam||"JEE Main + Advanced")} • ${esc(data.profile.attempt||"")}</div>
- <div class="print-section"><h3>Today — Daily Subject Checklist</h3><table class="print-table"><tr><th>Subject</th>${CHECK_ITEMS.map(k=>`<th>${k}</th>`).join("")}</tr>${rows}</table></div>
- <div class="print-section"><h3>Preparation Snapshot</h3><table class="print-table"><tr><th>JEE Syllabus Completed</th><td>${chaptersDone}/${data.chapters.length}</td><th>Total Study Hours</th><td>${totalHours.toFixed(2)}</td></tr><tr><th>PYQ Records</th><td>${data.pyqs.length}</td><th>Mock Tests</th><td>${data.tests.length}</td></tr><tr><th>Revision Items</th><td>${data.revisions.length}</td><th>Mistakes Logged</th><td>${data.mistakes.length}</td></tr></table></div>
- <div class="print-section"><h3>Recent Mock Tests</h3>${tests}</div>
- <div class="print-section"><h3>High Priority Backlog</h3>${backlog}</div>
- <div class="print-footer">All rights reserved © Naresh Kuntal • Generated from JEE Tracker</div>`;
+ const dates=currentWeek(), start=dates[0], end=dates[6], today=todayISO();
+ const name=data.profile.name||"Student";
+ const totalHours=data.daily.filter(x=>within(x.date,start,end)).reduce((n,x)=>n+Number(x.hours||0),0);
+ const targetHours=Number(data.targets.hours||0)*7;
+ const weekTasks=data.tasks.filter(t=>within(t.date,start,end));
+ const taskDone=weekTasks.filter(t=>t.done).length;
+ const weekPyq=data.pyqs.filter(x=>within(x.date||today,start,end));
+ const pyqSolved=weekPyq.reduce((n,x)=>n+Number(x.solved||0),0);
+ const weekTests=data.tests.filter(x=>within(x.date||today,start,end));
+ const weekRev=data.revisions.filter(x=>x.done&&within(x.date||today,start,end));
+ const chapterDone=data.chapters.filter(c=>["Done","Revised","Mastered"].includes(c.status)).length;
+ const chapterTotal=data.chapters.length;
+ const boardTarget=Math.round(data.boardSubjects.reduce((n,x)=>n+Number(x[1]||0),0)/Math.max(1,data.boardSubjects.length));
+ const subjectRows=CHECK_SUBJECTS.map(subject=>{
+   let done=0,total=0;
+   dates.forEach(day=>{const o=data.subjectChecks[day]?.[subject]||{};CHECK_ITEMS.forEach(k=>{total++;if(o[k])done++})});
+   return `<tr><td><b>${esc(subject)}</b></td><td>${done}/${total}</td><td>${pct(done,total)}%</td></tr>`;
+ }).join("");
+ const dayRows=dates.map(day=>{
+   const hours=data.daily.filter(x=>x.date===day).reduce((n,x)=>n+Number(x.hours||0),0);
+   const tasks=data.tasks.filter(t=>t.date===day); const td=tasks.filter(t=>t.done).length;
+   let cd=0,ct=0; const all=data.subjectChecks[day]||{};
+   CHECK_SUBJECTS.forEach(sub=>CHECK_ITEMS.forEach(k=>{ct++;if(all[sub]?.[k])cd++}));
+   return `<tr class="${day===today?"today-row":""}"><td><b>${new Date(day+"T00:00:00").toLocaleDateString("en-IN",{weekday:"short"})}</b><br><small>${fmt(day)}</small></td><td>${hours.toFixed(1)} h</td><td>${td}/${tasks.length||0}</td><td>${cd}/${ct}</td></tr>`;
+ }).join("");
+ const tests=weekTests.length?`<table class="print-table compact-print"><tr><th>Test</th><th>Date</th><th>Exam</th><th>Score</th><th>Accuracy</th></tr>${weekTests.map(t=>`<tr><td>${esc(t.name)}</td><td>${fmt(t.date)}</td><td>${esc(t.exam)}</td><td>${t.score}/${t.total}</td><td>${t.accuracy}%</td></tr>`).join("")}</table>`:`<div class="print-note">No mock test was logged this week.</div>`;
+ const backlog=data.chapters.filter(c=>c.priority==="High"&&c.status!=="Mastered").slice(0,8);
+ const backlogHtml=backlog.length?`<ul class="print-list">${backlog.map(c=>`<li><b>${esc(c.subject)}</b> — ${esc(c.name)} <span>(${esc(c.status)})</span></li>`).join("")}</ul>`:`<div class="print-note">No high-priority backlog 🎉</div>`;
+ const weeklyCompletion=pct(taskDone,weekTasks.length);
+ const hoursCompletion=pct(totalHours,targetHours);
+ $("#printReport").innerHTML=`
+ ${reportHeader("Weekly Progress Report",`${esc(name)} • ${esc(data.profile.exam||"JEE Main + Advanced")} • ${esc(data.profile.attempt||"")}<br>Week: ${fmt(start)} — ${fmt(end)}`)}
+ <div class="print-stat-grid">
+   <div><span>Study Hours</span><b>${totalHours.toFixed(1)} h</b><small>Target ${targetHours.toFixed(1)} h • ${hoursCompletion}%</small></div>
+   <div><span>Task Completion</span><b>${weeklyCompletion}%</b><small>${taskDone}/${weekTasks.length} tasks</small></div>
+   <div><span>PYQs Solved</span><b>${pyqSolved}</b><small>${weekPyq.length} records</small></div>
+   <div><span>Mock Tests</span><b>${weekTests.length}</b><small>${weekRev.length} revisions completed</small></div>
+ </div>
+ <div class="print-section"><h3>1. Daily Performance</h3><table class="print-table"><tr><th>Day</th><th>Study</th><th>Tasks</th><th>Subject Checklist</th></tr>${dayRows}</table></div>
+ <div class="print-section"><h3>2. Subject Checklist — Weekly</h3><table class="print-table"><tr><th>Subject</th><th>Checks Completed</th><th>Completion</th></tr>${subjectRows}</table></div>
+ <div class="print-two-col">
+   <div class="print-section"><h3>3. Preparation Snapshot</h3><table class="print-table"><tr><th>JEE syllabus</th><td>${chapterDone}/${chapterTotal} completed</td></tr><tr><th>Board target average</th><td>${boardTarget}%</td></tr><tr><th>Revisions completed</th><td>${weekRev.length}</td></tr><tr><th>Mistakes in book</th><td>${data.mistakes.length}</td></tr></table></div>
+   <div class="print-section"><h3>4. High-Priority Backlog</h3>${backlogHtml}</div>
+ </div>
+ <div class="print-section"><h3>5. Mock Tests This Week</h3>${tests}</div>
+ <div class="print-footer">All rights reserved © Naresh Kuntal • JEE Tracker • Weekly report generated on ${fmt(today)}</div>`;
 }
-function printProgress(){
- buildPrintReport(); setTimeout(()=>window.print(),50);
+
+function buildDailySheet(){
+ ensureChecks();
+ const today=todayISO(), d=data.subjectChecks[today], tasks=data.tasks.filter(t=>t.date===today);
+ const doneTasks=tasks.filter(t=>t.done).length;
+ const hours=data.daily.filter(x=>x.date===today).reduce((n,x)=>n+Number(x.hours||0),0);
+ const checkRows=CHECK_SUBJECTS.map(s=>`<tr><td><b>${esc(s)}</b></td>${CHECK_ITEMS.map(k=>`<td class="center-box">${checkMark(d[s][k])}</td>`).join("")}</tr>`).join("");
+ const taskRows=tasks.length?tasks.map(t=>`<tr><td class="center-box">${t.done?"☑":"☐"}</td><td>${taskIcon(t.kind)}</td><td><b>${esc(t.title)}</b></td><td>${esc(t.subject||t.kind)}</td><td>${esc(t.time||"")}</td></tr>`).join(""):Array.from({length:6},()=>`<tr><td class="center-box">☐</td><td>•</td><td>________________________________</td><td>________________</td><td>________</td></tr>`).join("");
+ const slots=["6:00–8:00","8:00–10:00","10:00–12:00","12:00–2:00","2:00–4:00","4:00–6:00","6:00–8:00","8:00–10:00"];
+ const slotRows=slots.map(x=>`<tr><td><b>${x}</b></td><td>____________________________________________</td><td class="center-box">☐</td></tr>`).join("");
+ $("#dailyPrintReport").innerHTML=`
+ ${reportHeader("Daily Task Sheet",`${esc(data.profile.name||"Student")} • ${esc(data.profile.exam||"JEE Main + Advanced")} • ${fmt(today)}`)}
+ <div class="print-stat-grid daily-stats"><div><span>Study Logged</span><b>${hours.toFixed(1)} h</b><small>Today</small></div><div><span>Tasks</span><b>${doneTasks}/${tasks.length}</b><small>completed</small></div><div><span>JEE Goal</span><b>${esc(data.profile.goal||"Stay consistent")}</b><small>${esc(data.profile.attempt||"")}</small></div></div>
+ <div class="print-section"><h3>1. Subject Checklist — Tick as you finish</h3><table class="print-table checklist-print"><tr><th>Subject</th>${CHECK_ITEMS.map(k=>`<th>${k}</th>`).join("")}</tr>${checkRows}</table></div>
+ <div class="print-section"><h3>2. Today's Task List</h3><table class="print-table"><tr><th>Done</th><th></th><th>Task</th><th>Subject</th><th>Time</th></tr>${taskRows}</table></div>
+ <div class="print-section"><h3>3. Time Plan</h3><table class="print-table"><tr><th>Time</th><th>Plan / Topic</th><th>Done</th></tr>${slotRows}</table></div>
+ <div class="print-two-col">
+  <div class="print-section"><h3>4. Top 3 Priorities</h3><div class="write-lines">1. _______________________________________________<br>2. _______________________________________________<br>3. _______________________________________________</div></div>
+  <div class="print-section"><h3>5. End-of-Day Review</h3><div class="write-lines">What went well? __________________________________<br>Biggest mistake: _________________________________<br>Tomorrow's focus: ________________________________</div></div>
+ </div>
+ <div class="print-footer">All rights reserved © Naresh Kuntal • JEE Tracker • Daily task sheet</div>`;
 }
-$("#printBtn").onclick=printProgress;
-$("#printSideBtn").onclick=printProgress;
-$("#printPlannerBtn").onclick=printProgress;
+function printA4(type){
+ $("#printReport").classList.remove("active-print"); $("#dailyPrintReport").classList.remove("active-print");
+ if(type==="weekly"){buildWeeklyReport();$("#printReport").classList.add("active-print");}
+ else {buildDailySheet();$("#dailyPrintReport").classList.add("active-print");}
+ document.body.classList.add("is-printing");
+ setTimeout(()=>window.print(),60);
+}
+window.onafterprint=()=>{document.body.classList.remove("is-printing");$("#printReport").classList.remove("active-print");$("#dailyPrintReport").classList.remove("active-print");};
+
+$("#printWeeklyBtn").onclick=()=>printA4("weekly");
+$("#dashWeeklyBtn").onclick=()=>printA4("weekly");
+$("#printDailyBtn").onclick=()=>printA4("daily");
+$("#dashDailyBtn").onclick=()=>printA4("daily");
+$("#plannerDailyBtn").onclick=()=>printA4("daily");
 
 $("#resetBtn").onclick=()=>{if(confirm("Reset ALL tracker data? This cannot be undone.")){localStorage.removeItem(KEY);location.reload()}};
 

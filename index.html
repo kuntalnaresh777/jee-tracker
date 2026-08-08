@@ -2,121 +2,175 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>JEE Tracker — Personal Preparation Dashboard</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0d18">
+<title>JEE Tracker — Preparation OS</title>
+<link rel="icon" type="image/png" href="logo.png">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<div class="bg-orb orb1"></div><div class="bg-orb orb2"></div>
+
 <div class="app-shell">
   <aside class="sidebar">
-    <div class="brand"><div class="logo">J</div><div><b>JEE Tracker</b><small>Preparation OS</small></div></div>
+    <div class="brand">
+      <img src="logo.png" class="logo" alt="Naresh Kuntal">
+      <div><b>JEE Tracker</b><small>Preparation OS</small></div>
+    </div>
     <nav id="nav">
-      <button class="nav-btn active" data-page="dashboard">🏠 Dashboard</button>
-      <button class="nav-btn" data-page="syllabus">📚 Syllabus</button>
-      <button class="nav-btn" data-page="daily">⏱ Daily Log</button>
-      <button class="nav-btn" data-page="pyq">📝 PYQ Tracker</button>
-      <button class="nav-btn" data-page="tests">🎯 Mock Tests</button>
-      <button class="nav-btn" data-page="revision">🔄 Revision</button>
-      <button class="nav-btn" data-page="backlog">🚧 Backlog</button>
-      <button class="nav-btn" data-page="mistakes">🧠 Mistakes</button>
-      <button class="nav-btn" data-page="targets">🎯 Targets</button>
-      <button class="nav-btn" data-page="settings">⚙ Settings</button>
+      <button class="nav-btn active" data-page="dashboard">⌂ <span>Dashboard</span></button>
+      <button class="nav-btn" data-page="planner">✓ <span>My Planner</span></button>
+      <button class="nav-btn" data-page="syllabus">▦ <span>Syllabus</span></button>
+      <button class="nav-btn" data-page="daily">◷ <span>Study Log</span></button>
+      <button class="nav-btn" data-page="pyq">◇ <span>PYQ Tracker</span></button>
+      <button class="nav-btn" data-page="tests">★ <span>Mock Tests</span></button>
+      <button class="nav-btn" data-page="revision">↻ <span>Revision</span></button>
+      <button class="nav-btn" data-page="mistakes">!</span> <span>Mistake Book</span></button>
+      <button class="nav-btn" data-page="board">▤ <span>CBSE Boards</span></button>
+      <button class="nav-btn" data-page="settings">⚙ <span>Settings</span></button>
     </nav>
-    <div class="side-foot"><span id="saveStatus">Saved locally</span><button id="exportBtn" class="mini-btn">Export Backup</button></div>
+    <div class="side-bottom">
+      <div class="mini-profile"><img src="logo.png" alt=""><div><b id="sideName">Your Name</b><small id="sideExam">JEE + Boards</small></div></div>
+      <div class="save-line"><span id="saveStatus">Saved locally</span><button id="exportBtn">Backup</button></div>
+    </div>
   </aside>
 
   <main class="main">
     <header class="topbar">
-      <div><div class="eyebrow">JEE PREPARATION</div><h1 id="pageTitle">Dashboard</h1></div>
-      <div class="top-actions"><span id="today"></span><button id="themeBtn" class="icon-btn" title="Toggle theme">☀️</button></div>
+      <div><div class="eyebrow">YOUR PREPARATION OS</div><h1 id="pageTitle">Dashboard</h1></div>
+      <div class="top-actions"><span id="today"></span><button id="themeBtn" class="icon-btn">☼</button></div>
     </header>
 
     <section id="page-dashboard" class="page active">
       <div class="hero">
-        <div><div class="eyebrow">YOUR COMMAND CENTER</div><h2>Build consistency. Track everything. <span>Crack JEE.</span></h2>
-        <p>One place for syllabus, PYQs, revisions, tests, backlog and daily study.</p></div>
-        <div class="hero-ring"><strong id="overallPct">0%</strong><small>overall</small></div>
+        <div class="hero-copy">
+          <div class="eyebrow">WELCOME BACK</div>
+          <h2 id="welcomeTitle">Build consistency. <span>Crack JEE.</span></h2>
+          <p id="goalLine">Your dashboard for JEE Main, Advanced and CBSE Boards.</p>
+          <div class="hero-actions"><button class="primary" data-go="planner">Open Today's Plan →</button><button class="ghost" data-go="tests">Log a Mock Test</button></div>
+        </div>
+        <div class="ring-wrap"><div class="ring" id="overallRing"><strong id="overallPct">0%</strong><small>syllabus</small></div></div>
       </div>
-      <div class="cards" id="statCards"></div>
-      <div class="grid-2">
-        <div class="panel"><div class="panel-head"><h3>Subject Progress</h3><span>chapter status</span></div><div id="subjectProgress"></div></div>
-        <div class="panel"><div class="panel-head"><h3>Today's Plan</h3><button class="text-btn" data-go="daily">Open log →</button></div><div id="todayPlan"></div></div>
+
+      <div class="exam-strip" id="examCountdowns"></div>
+      <div class="stats" id="statCards"></div>
+
+      <div class="dashboard-grid">
+        <div class="panel wide-panel">
+          <div class="panel-head"><div><h3>Today's Checklist</h3><span>Tick it off as you finish.</span></div><button class="text-btn" data-go="planner">Manage →</button></div>
+          <div id="dashTasks"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div><h3>Focus Timer</h3><span>Study / break cycles</span></div></div>
+          <div class="timer-box"><div id="timerDisplay">25:00</div><div class="timer-mode" id="timerMode">Focus session</div><div class="timer-controls"><button id="timerStart" class="primary">Start</button><button id="timerReset" class="ghost">Reset</button></div></div>
+        </div>
       </div>
-      <div class="grid-2">
-        <div class="panel"><div class="panel-head"><h3>Recent Mock Tests</h3><button class="text-btn" data-go="tests">View all →</button></div><div id="recentTests"></div></div>
-        <div class="panel"><div class="panel-head"><h3>Backlog Snapshot</h3><button class="text-btn" data-go="backlog">Manage →</button></div><div id="backlogSnap"></div></div>
+
+      <div class="dashboard-grid">
+        <div class="panel"><div class="panel-head"><div><h3>Subject Progress</h3><span>Chapter completion</span></div><button class="text-btn" data-go="syllabus">Open →</button></div><div id="subjectProgress"></div></div>
+        <div class="panel"><div class="panel-head"><div><h3>7-Day Study Timeline</h3><span>Hours logged</span></div></div><div id="weekChart" class="week-chart"></div></div>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="panel"><div class="panel-head"><div><h3>Revision Queue</h3><span>Don't let chapters fade.</span></div><button class="text-btn" data-go="revision">Open →</button></div><div id="dashRevision"></div></div>
+        <div class="panel"><div class="panel-head"><div><h3>Backlog & Priority</h3><span>Next things to attack</span></div></div><div id="dashBacklog"></div></div>
+      </div>
+    </section>
+
+    <section id="page-planner" class="page">
+      <div class="page-intro"><div><div class="eyebrow">PLAN • EXECUTE • CHECK</div><h2>My Planner</h2><p>Classes, notes, homework, PYQs, revision — everything gets a checkbox.</p></div><button class="primary" id="addTaskBtn">+ Add Task</button></div>
+      <div class="planner-layout">
+        <div class="panel"><div class="panel-head"><div><h3>Today's Tasks</h3><span id="taskSummary"></span></div><select id="taskFilter"><option value="all">All</option><option value="pending">Pending</option><option value="done">Completed</option></select></div><div id="taskList"></div></div>
+        <div class="panel">
+          <div class="panel-head"><div><h3>Quick Add</h3><span>Common JEE routine</span></div></div>
+          <div class="quick-grid" id="quickTasks">
+            <button data-kind="Class">🎓 Class</button><button data-kind="Notes">📒 Notes</button><button data-kind="HW">📝 Homework</button><button data-kind="PYQ">◇ PYQ</button><button data-kind="Revision">↻ Revision</button><button data-kind="Mock Test">★ Mock Test</button>
+          </div>
+          <div class="mini-timeline"><h4>Today's Timeline</h4><div id="dayTimeline"></div></div>
+        </div>
       </div>
     </section>
 
     <section id="page-syllabus" class="page">
+      <div class="page-intro"><div><div class="eyebrow">MASTER THE SYLLABUS</div><h2>Chapter Tracker</h2></div></div>
       <div class="toolbar"><input id="syllabusSearch" placeholder="Search chapters..."><select id="subjectFilter"><option>All</option><option>Physics</option><option>Chemistry</option><option>Maths</option></select><select id="statusFilter"><option>All</option><option>Not Started</option><option>In Progress</option><option>Done</option><option>Revised</option><option>Mastered</option></select></div>
-      <div class="panel"><div class="panel-head"><h3>Chapter Tracker</h3><button class="primary" id="addChapterBtn">+ Add Chapter</button></div><div id="syllabusList"></div></div>
+      <div class="panel"><div class="panel-head"><div><h3>JEE Syllabus</h3><span>Use the dropdown on every chapter.</span></div><button class="primary" id="addChapterBtn">+ Add Chapter</button></div><div id="syllabusList"></div></div>
     </section>
 
     <section id="page-daily" class="page">
-      <div class="grid-2">
-        <div class="panel"><div class="panel-head"><h3>Log Study Session</h3></div>
-          <form id="dailyForm" class="form-grid">
-            <label>Date<input type="date" id="dDate" required></label>
-            <label>Subject<select id="dSubject"><option>Physics</option><option>Chemistry</option><option>Maths</option><option>Other</option></select></label>
-            <label>Hours<input type="number" id="dHours" min="0" max="24" step=".25" required></label>
-            <label>Topic<input id="dTopic" placeholder="e.g. Electrostatics"></label>
-            <label class="wide">Notes<textarea id="dNotes" rows="3" placeholder="What did you complete?"></textarea></label>
-            <button class="primary wide">Save session</button>
-          </form>
+      <div class="page-intro"><div><div class="eyebrow">CONSISTENCY WINS</div><h2>Study Log</h2></div></div>
+      <div class="dashboard-grid">
+        <div class="panel"><div class="panel-head"><div><h3>Log Study Session</h3><span>Keep your hours honest.</span></div></div>
+          <form id="dailyForm" class="form-grid"><label>Date<input type="date" id="dDate" required></label><label>Subject<select id="dSubject"><option>Physics</option><option>Chemistry</option><option>Maths</option><option>Boards</option><option>Other</option></select></label><label>Hours<input type="number" id="dHours" min="0" max="24" step=".25" required></label><label>Topic<input id="dTopic" placeholder="e.g. Electrostatics"></label><label class="wide">Notes<textarea id="dNotes" rows="3" placeholder="What did you complete?"></textarea></label><button class="primary wide">Save session</button></form>
         </div>
-        <div class="panel"><div class="panel-head"><h3>Study Summary</h3></div><div id="studySummary"></div></div>
+        <div class="panel"><div class="panel-head"><div><h3>Study Analytics</h3><span>Weekly target vs actual</span></div></div><div id="studySummary"></div></div>
       </div>
-      <div class="panel"><div class="panel-head"><h3>Study History</h3><button class="danger-outline" id="clearDaily">Clear history</button></div><div id="dailyList"></div></div>
+      <div class="panel"><div class="panel-head"><h3>History</h3><button class="danger-outline" id="clearDaily">Clear history</button></div><div id="dailyList"></div></div>
     </section>
 
     <section id="page-pyq" class="page">
-      <div class="panel"><div class="panel-head"><h3>PYQ Tracker</h3><button class="primary" id="addPyqBtn">+ Add PYQ Record</button></div><div id="pyqStats"></div><div id="pyqList"></div></div>
+      <div class="page-intro"><div><div class="eyebrow">QUESTION PRACTICE</div><h2>PYQ Tracker</h2></div><button class="primary" id="addPyqBtn">+ Add Record</button></div>
+      <div class="stats" id="pyqStats"></div><div class="panel"><div id="pyqList"></div></div>
     </section>
 
     <section id="page-tests" class="page">
-      <div class="panel"><div class="panel-head"><h3>Mock Test Analytics</h3><button class="primary" id="addTestBtn">+ Add Test</button></div><div id="testStats"></div><div id="testList"></div></div>
+      <div class="page-intro"><div><div class="eyebrow">EXAM SIMULATION</div><h2>Mock Tests</h2></div><button class="primary" id="addTestBtn">+ Log Test</button></div>
+      <div class="stats" id="testStats"></div><div class="panel"><div id="testList"></div></div>
     </section>
 
     <section id="page-revision" class="page">
-      <div class="panel"><div class="panel-head"><h3>Revision Queue</h3><span>Use spaced repetition manually</span></div><div id="revisionList"></div></div>
-    </section>
-
-    <section id="page-backlog" class="page">
-      <div class="panel"><div class="panel-head"><h3>Backlog</h3><button class="primary" id="addBacklogBtn">+ Add Backlog</button></div><div id="backlogList"></div></div>
+      <div class="page-intro"><div><div class="eyebrow">SPACED REVISION</div><h2>Revision Queue</h2><p>Add a chapter, choose a next revision date and tick it off.</p></div><button class="primary" id="addRevisionBtn">+ Add Revision</button></div>
+      <div class="panel"><div id="revisionList"></div></div>
     </section>
 
     <section id="page-mistakes" class="page">
-      <div class="panel"><div class="panel-head"><h3>Mistake Notebook</h3><button class="primary" id="addMistakeBtn">+ Add Mistake</button></div><div id="mistakeList"></div></div>
+      <div class="page-intro"><div><div class="eyebrow">LEARN FROM ERRORS</div><h2>Mistake Book</h2></div><button class="primary" id="addMistakeBtn">+ Add Mistake</button></div>
+      <div class="panel"><div id="mistakeList"></div></div>
     </section>
 
-    <section id="page-targets" class="page">
-      <div class="grid-2">
-        <div class="panel"><div class="panel-head"><h3>Daily Target</h3></div><form id="targetForm" class="form-grid">
-          <label>Target hours<input type="number" id="targetHours" min="0" step=".25"></label>
-          <label>Target PYQs<input type="number" id="targetPyqs" min="0"></label>
-          <label>Target questions<input type="number" id="targetQs" min="0"></label>
-          <button class="primary wide">Save targets</button>
-        </form></div>
-        <div class="panel"><div class="panel-head"><h3>Target Progress</h3></div><div id="targetProgress"></div></div>
+    <section id="page-board" class="page">
+      <div class="page-intro"><div><div class="eyebrow">CBSE • CLASS 12</div><h2>Boards Hub</h2><p>Keep boards preparation alongside JEE without losing track.</p></div></div>
+      <div class="exam-strip" id="boardCountdownLarge"></div>
+      <div class="dashboard-grid">
+        <div class="panel"><div class="panel-head"><div><h3>Board Checklist</h3><span>Repeat this routine for each chapter.</span></div><button class="primary" id="addBoardBtn">+ Add Board Task</button></div><div id="boardTasks"></div></div>
+        <div class="panel"><div class="panel-head"><div><h3>Board Targets</h3><span>Plan your weekly board time.</span></div></div><div id="boardSubjects"></div></div>
       </div>
     </section>
 
     <section id="page-settings" class="page">
-      <div class="grid-2">
-        <div class="panel"><div class="panel-head"><h3>Profile</h3></div><form id="settingsForm" class="form-grid">
-          <label>Your name<input id="userName" placeholder="Student"></label>
-          <label>JEE attempt<select id="attempt"><option>JEE 2027</option><option>JEE 2028</option><option>Custom</option></select></label>
-          <label class="wide">Goal<input id="goal" placeholder="e.g. IIT / preferred branch"></label>
-          <button class="primary wide">Save profile</button>
-        </form></div>
-        <div class="panel"><div class="panel-head"><h3>Data</h3></div><button class="secondary wide-btn" id="importBtn">Import Backup JSON</button><input type="file" id="importFile" accept=".json" hidden><button class="danger wide-btn" id="resetBtn">Reset all data</button><p class="muted">All data is stored in this browser using localStorage. Export a backup before clearing browser data.</p></div>
+      <div class="page-intro"><div><div class="eyebrow">PERSONALIZE</div><h2>Settings</h2></div></div>
+      <div class="dashboard-grid">
+        <div class="panel"><div class="panel-head"><h3>Profile</h3></div><form id="profileForm" class="form-grid"><label>Your name<input id="userName" required></label><label>Exam<select id="profileExam"><option>JEE Main</option><option>JEE Advanced</option><option>JEE Main + Advanced</option></select></label><label>Attempt / Year<select id="attempt"><option>JEE 2027</option><option>JEE 2028</option><option>Custom</option></select></label><label>Target / Goal<input id="goal" placeholder="e.g. IIT / branch"></label><button class="primary wide">Save Profile</button></form></div>
+        <div class="panel"><div class="panel-head"><div><h3>Exam Dates</h3><span>Enter official dates when available. The dashboard countdown uses these dates.</span></div></div><form id="dateForm" class="form-grid"><label>Board exam date<input type="date" id="boardDate"></label><label>JEE Main date<input type="date" id="mainDate"></label><label>JEE Advanced date<input type="date" id="advDate"></label><button class="primary wide">Save Dates</button></form></div>
       </div>
+      <div class="panel danger-panel"><div class="panel-head"><div><h3>Data</h3><span>Keep a backup before resetting.</span></div></div><div class="button-row"><button class="ghost" id="importBtn">Import Backup</button><button class="danger" id="resetBtn">Reset All Data</button></div><input id="importFile" type="file" accept=".json" hidden></div>
     </section>
+
+    <footer>All rights reserved © Naresh Kuntal</footer>
   </main>
 </div>
 
-<div id="modal" class="modal"><div class="modal-card"><div class="modal-head"><h3 id="modalTitle">Add</h3><button id="closeModal">×</button></div><div id="modalBody"></div></div></div>
+<div id="onboarding" class="modal-overlay">
+  <div class="onboard-card">
+    <img src="logo.png" class="onboard-logo" alt="Naresh Kuntal">
+    <div class="eyebrow">WELCOME TO JEE TRACKER</div>
+    <h2>Let's build your preparation dashboard.</h2>
+    <p>Tell us about your target once. This stays saved only in your browser.</p>
+    <form id="onboardingForm" class="form-grid">
+      <label>Your name<input id="obName" required placeholder="Enter your name"></label>
+      <label>Exam<select id="obExam"><option>JEE Main + Advanced</option><option>JEE Main</option><option>JEE Advanced</option></select></label>
+      <label>Attempt / Year<select id="obAttempt"><option>JEE 2027</option><option>JEE 2028</option><option>Custom</option></select></label>
+      <label>Target / Goal<input id="obGoal" placeholder="e.g. IIT / preferred branch"></label>
+      <label>CBSE Board date <span class="optional">optional</span><input id="obBoardDate" type="date"></label>
+      <label>JEE Main date <span class="optional">optional</span><input id="obMainDate" type="date"></label>
+      <label>JEE Advanced date <span class="optional">optional</span><input id="obAdvDate" type="date"></label>
+      <button class="primary wide" type="submit">Create My Dashboard →</button>
+    </form>
+  </div>
+</div>
+
+<div id="toast"></div>
+<div id="modal" class="modal-overlay"><div class="modal-card"><div class="modal-head"><h3 id="modalTitle">Add</h3><button id="closeModal" class="icon-btn">×</button></div><div id="modalBody"></div></div></div>
 <script src="app.js"></script>
 </body>
 </html>

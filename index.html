@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JEE Tracker — Personal Preparation Dashboard</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand"><div class="logo">J</div><div><b>JEE Tracker</b><small>Preparation OS</small></div></div>
+    <nav id="nav">
+      <button class="nav-btn active" data-page="dashboard">🏠 Dashboard</button>
+      <button class="nav-btn" data-page="syllabus">📚 Syllabus</button>
+      <button class="nav-btn" data-page="daily">⏱ Daily Log</button>
+      <button class="nav-btn" data-page="pyq">📝 PYQ Tracker</button>
+      <button class="nav-btn" data-page="tests">🎯 Mock Tests</button>
+      <button class="nav-btn" data-page="revision">🔄 Revision</button>
+      <button class="nav-btn" data-page="backlog">🚧 Backlog</button>
+      <button class="nav-btn" data-page="mistakes">🧠 Mistakes</button>
+      <button class="nav-btn" data-page="targets">🎯 Targets</button>
+      <button class="nav-btn" data-page="settings">⚙ Settings</button>
+    </nav>
+    <div class="side-foot"><span id="saveStatus">Saved locally</span><button id="exportBtn" class="mini-btn">Export Backup</button></div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div><div class="eyebrow">JEE PREPARATION</div><h1 id="pageTitle">Dashboard</h1></div>
+      <div class="top-actions"><span id="today"></span><button id="themeBtn" class="icon-btn" title="Toggle theme">☀️</button></div>
+    </header>
+
+    <section id="page-dashboard" class="page active">
+      <div class="hero">
+        <div><div class="eyebrow">YOUR COMMAND CENTER</div><h2>Build consistency. Track everything. <span>Crack JEE.</span></h2>
+        <p>One place for syllabus, PYQs, revisions, tests, backlog and daily study.</p></div>
+        <div class="hero-ring"><strong id="overallPct">0%</strong><small>overall</small></div>
+      </div>
+      <div class="cards" id="statCards"></div>
+      <div class="grid-2">
+        <div class="panel"><div class="panel-head"><h3>Subject Progress</h3><span>chapter status</span></div><div id="subjectProgress"></div></div>
+        <div class="panel"><div class="panel-head"><h3>Today's Plan</h3><button class="text-btn" data-go="daily">Open log →</button></div><div id="todayPlan"></div></div>
+      </div>
+      <div class="grid-2">
+        <div class="panel"><div class="panel-head"><h3>Recent Mock Tests</h3><button class="text-btn" data-go="tests">View all →</button></div><div id="recentTests"></div></div>
+        <div class="panel"><div class="panel-head"><h3>Backlog Snapshot</h3><button class="text-btn" data-go="backlog">Manage →</button></div><div id="backlogSnap"></div></div>
+      </div>
+    </section>
+
+    <section id="page-syllabus" class="page">
+      <div class="toolbar"><input id="syllabusSearch" placeholder="Search chapters..."><select id="subjectFilter"><option>All</option><option>Physics</option><option>Chemistry</option><option>Maths</option></select><select id="statusFilter"><option>All</option><option>Not Started</option><option>In Progress</option><option>Done</option><option>Revised</option><option>Mastered</option></select></div>
+      <div class="panel"><div class="panel-head"><h3>Chapter Tracker</h3><button class="primary" id="addChapterBtn">+ Add Chapter</button></div><div id="syllabusList"></div></div>
+    </section>
+
+    <section id="page-daily" class="page">
+      <div class="grid-2">
+        <div class="panel"><div class="panel-head"><h3>Log Study Session</h3></div>
+          <form id="dailyForm" class="form-grid">
+            <label>Date<input type="date" id="dDate" required></label>
+            <label>Subject<select id="dSubject"><option>Physics</option><option>Chemistry</option><option>Maths</option><option>Other</option></select></label>
+            <label>Hours<input type="number" id="dHours" min="0" max="24" step=".25" required></label>
+            <label>Topic<input id="dTopic" placeholder="e.g. Electrostatics"></label>
+            <label class="wide">Notes<textarea id="dNotes" rows="3" placeholder="What did you complete?"></textarea></label>
+            <button class="primary wide">Save session</button>
+          </form>
+        </div>
+        <div class="panel"><div class="panel-head"><h3>Study Summary</h3></div><div id="studySummary"></div></div>
+      </div>
+      <div class="panel"><div class="panel-head"><h3>Study History</h3><button class="danger-outline" id="clearDaily">Clear history</button></div><div id="dailyList"></div></div>
+    </section>
+
+    <section id="page-pyq" class="page">
+      <div class="panel"><div class="panel-head"><h3>PYQ Tracker</h3><button class="primary" id="addPyqBtn">+ Add PYQ Record</button></div><div id="pyqStats"></div><div id="pyqList"></div></div>
+    </section>
+
+    <section id="page-tests" class="page">
+      <div class="panel"><div class="panel-head"><h3>Mock Test Analytics</h3><button class="primary" id="addTestBtn">+ Add Test</button></div><div id="testStats"></div><div id="testList"></div></div>
+    </section>
+
+    <section id="page-revision" class="page">
+      <div class="panel"><div class="panel-head"><h3>Revision Queue</h3><span>Use spaced repetition manually</span></div><div id="revisionList"></div></div>
+    </section>
+
+    <section id="page-backlog" class="page">
+      <div class="panel"><div class="panel-head"><h3>Backlog</h3><button class="primary" id="addBacklogBtn">+ Add Backlog</button></div><div id="backlogList"></div></div>
+    </section>
+
+    <section id="page-mistakes" class="page">
+      <div class="panel"><div class="panel-head"><h3>Mistake Notebook</h3><button class="primary" id="addMistakeBtn">+ Add Mistake</button></div><div id="mistakeList"></div></div>
+    </section>
+
+    <section id="page-targets" class="page">
+      <div class="grid-2">
+        <div class="panel"><div class="panel-head"><h3>Daily Target</h3></div><form id="targetForm" class="form-grid">
+          <label>Target hours<input type="number" id="targetHours" min="0" step=".25"></label>
+          <label>Target PYQs<input type="number" id="targetPyqs" min="0"></label>
+          <label>Target questions<input type="number" id="targetQs" min="0"></label>
+          <button class="primary wide">Save targets</button>
+        </form></div>
+        <div class="panel"><div class="panel-head"><h3>Target Progress</h3></div><div id="targetProgress"></div></div>
+      </div>
+    </section>
+
+    <section id="page-settings" class="page">
+      <div class="grid-2">
+        <div class="panel"><div class="panel-head"><h3>Profile</h3></div><form id="settingsForm" class="form-grid">
+          <label>Your name<input id="userName" placeholder="Student"></label>
+          <label>JEE attempt<select id="attempt"><option>JEE 2027</option><option>JEE 2028</option><option>Custom</option></select></label>
+          <label class="wide">Goal<input id="goal" placeholder="e.g. IIT / preferred branch"></label>
+          <button class="primary wide">Save profile</button>
+        </form></div>
+        <div class="panel"><div class="panel-head"><h3>Data</h3></div><button class="secondary wide-btn" id="importBtn">Import Backup JSON</button><input type="file" id="importFile" accept=".json" hidden><button class="danger wide-btn" id="resetBtn">Reset all data</button><p class="muted">All data is stored in this browser using localStorage. Export a backup before clearing browser data.</p></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="modal" class="modal"><div class="modal-card"><div class="modal-head"><h3 id="modalTitle">Add</h3><button id="closeModal">×</button></div><div id="modalBody"></div></div></div>
+<script src="app.js"></script>
+</body>
+</html>

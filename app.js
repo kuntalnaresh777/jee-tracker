@@ -10,11 +10,11 @@ const fresh=()=>({
  chapters:chapters.map(([subject,name],i)=>({id:i+1,subject,name,status:"Not Started",priority:"Normal"})),
  tasks:[], daily:[], pyqs:[], tests:[], revisions:[], mistakes:[], boardTasks:[],
  boardSubjects:[["Physics",0],["Chemistry",0],["Mathematics",0],["English",0],["Computer Science",0]],
- targets:{hours:8,pyqs:30,qs:80},theme:"dark"
+ targets:{hours:8,pyqs:30,qs:80},subjectChecks:{},theme:"dark"
 });
 let data=JSON.parse(localStorage.getItem(KEY)||"null")||fresh();
 data.profile=data.profile||fresh().profile; data.dates=data.dates||fresh().dates;
-data.tasks=data.tasks||[]; data.revisions=data.revisions||[]; data.boardTasks=data.boardTasks||[]; data.boardSubjects=data.boardSubjects||fresh().boardSubjects; data.mistakes=data.mistakes||[]; data.daily=data.daily||[]; data.pyqs=data.pyqs||[]; data.tests=data.tests||[];
+data.tasks=data.tasks||[]; data.subjectChecks=data.subjectChecks||{}; data.revisions=data.revisions||[]; data.boardTasks=data.boardTasks||[]; data.boardSubjects=data.boardSubjects||fresh().boardSubjects; data.mistakes=data.mistakes||[]; data.daily=data.daily||[]; data.pyqs=data.pyqs||[]; data.tests=data.tests||[];
 if(data.onboarded===undefined)data.onboarded=!!data.profile.name;
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
@@ -46,6 +46,8 @@ function renderTasks(target="#taskList",filter="all",date=todayISO()){
  $(target).innerHTML=arr.map(t=>`<div class="task-row ${t.done?"done":""}"><label class="check"><input type="checkbox" data-task="${t.id}" ${t.done?"checked":""}><span></span></label><div class="task-icon">${taskIcon(t.kind)}</div><div class="task-main"><b>${esc(t.title)}</b><small>${esc(t.subject||t.kind)} ${t.time?"• "+esc(t.time):""}</small></div><select class="compact" data-task-kind="${t.id}"><option ${t.kind==="Class"?"selected":""}>Class</option><option ${t.kind==="Notes"?"selected":""}>Notes</option><option ${t.kind==="HW"?"selected":""}>HW</option><option ${t.kind==="PYQ"?"selected":""}>PYQ</option><option ${t.kind==="Revision"?"selected":""}>Revision</option><option ${t.kind==="Mock Test"?"selected":""}>Mock Test</option><option ${t.kind==="Other"?"selected":""}>Other</option></select><button class="delete" data-del-task="${t.id}">×</button></div>`).join("");
 }
 document.addEventListener("change",e=>{
+ if(e.target.dataset.subcheck){toggleSubjectCheck(decodeURIComponent(e.target.dataset.subcheck),decodeURIComponent(e.target.dataset.itemcheck),e.target.checked);return}
+
  if(e.target.dataset.task){let t=data.tasks.find(x=>x.id==e.target.dataset.task);if(t){t.done=e.target.checked;save();}}
  if(e.target.dataset.taskKind){let t=data.tasks.find(x=>x.id==e.target.dataset.taskKind);if(t){t.kind=e.target.value;save();}}
  if(e.target.dataset.status){let c=data.chapters.find(x=>x.id==e.target.dataset.status);if(c){c.status=e.target.value;save();}}
@@ -58,7 +60,39 @@ document.addEventListener("click",e=>{
  const q=e.target.closest("[data-kind]");if(q){quickAdd(q.dataset.kind);return}
 });
 
+
+const CHECK_ITEMS=["Class Attend","Notes","HW / DPP","PYQ","Revision","Test"];
+const CHECK_SUBJECTS=["Physics","Chemistry","Maths","English","Computer Science"];
+function ensureChecks(){
+ const d=todayISO();
+ if(!data.subjectChecks[d]) data.subjectChecks[d]={};
+ CHECK_SUBJECTS.forEach(s=>{if(!data.subjectChecks[d][s])data.subjectChecks[d][s]={};CHECK_ITEMS.forEach(k=>{if(typeof data.subjectChecks[d][s][k]!=="boolean")data.subjectChecks[d][s][k]=false})});
+}
+function checkKey(s,k){return `${s}||${k}`}
+function toggleSubjectCheck(subject,item,checked){
+ ensureChecks(); data.subjectChecks[todayISO()][subject][item]=checked; save(); renderSubjectChecklist(); renderDashboardChecklist();
+}
+function renderSubjectChecklist(){
+ ensureChecks();
+ const d=data.subjectChecks[todayISO()];
+ const done=Object.values(d).reduce((n,o)=>n+CHECK_ITEMS.filter(k=>o[k]).length,0), total=CHECK_SUBJECTS.length*CHECK_ITEMS.length;
+ const sum=$("#subjectTaskSummary"); if(sum)sum.textContent=`${done}/${total} completed`;
+ const dt=$("#checklistDate"); if(dt)dt.textContent=new Date().toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"short",year:"numeric"});
+ const makeRow=(s,mini=false)=>{
+   const o=d[s]; const count=CHECK_ITEMS.filter(k=>o[k]).length;
+   return `<div class="${mini?"dash-subject-card":"subject-check-row"} ${count===CHECK_ITEMS.length?"is-complete":""}">
+     ${mini?`<div class="dash-subject-head"><b>${s}</b><small>${count}/${CHECK_ITEMS.length}</small></div><div class="dash-mini-checks">`:`<div class="subject-name">${s}</div>`}
+     ${CHECK_ITEMS.map(k=>`<div class="check-cell"><label title="${k}"><input type="checkbox" data-subcheck="${encodeURIComponent(s)}" data-itemcheck="${encodeURIComponent(k)}" ${o[k]?"checked":""}><span>${k}</span></label></div>`).join("")}
+     ${mini?"</div>":""}</div>`;
+ };
+ const full=$("#subjectChecklist");
+ if(full)full.innerHTML=`<div class="subject-check-grid"><div class="subject-check-row header"><div>Subject</div>${CHECK_ITEMS.map(k=>`<div>${k}</div>`).join("")}</div>${CHECK_SUBJECTS.map(s=>makeRow(s)).join("")}</div>`;
+ const dash=$("#subjectChecklistDash");
+ if(dash)dash.innerHTML=`<div class="dash-checklist">${CHECK_SUBJECTS.map(s=>makeRow(s,true)).join("")}</div>`;
+}
+function renderDashboardChecklist(){renderSubjectChecklist();}
 function renderDashboard(){
+  renderSubjectChecklist();
  const total=data.chapters.length, done=data.chapters.filter(c=>["Done","Revised","Mastered"].includes(c.status)).length, overall=pct(done,total);
  $("#overallPct").textContent=overall+"%";$("#overallRing").style.setProperty("--p",overall+"%");
  $("#welcomeTitle").innerHTML=data.profile.name?`Welcome, ${esc(data.profile.name)} 👋<br><span>Let's crack ${esc(data.profile.attempt||"JEE")}.</span>`:`Build consistency. <span>Crack JEE.</span>`;
@@ -78,7 +112,8 @@ function renderDashboard(){
 }
 function renderWeekChart(){let days=[];for(let i=6;i>=0;i--){let d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-i);let iso=d.toISOString().slice(0,10),h=data.daily.filter(x=>x.date===iso).reduce((a,x)=>a+Number(x.hours),0);days.push({d:d.toLocaleDateString("en-IN",{weekday:"short"}),h})}let max=Math.max(1,...days.map(x=>x.h));$("#weekChart").innerHTML=days.map(x=>`<div class="week-col"><span>${x.h.toFixed(1)}</span><div class="week-bar"><i style="height:${Math.max(5,x.h/max*100)}%"></i></div><small>${x.d}</small></div>`).join("")}
 
-function renderPlanner(){const arr=data.tasks.filter(t=>t.date===todayISO()),done=arr.filter(t=>t.done).length;$("#taskSummary").textContent=`${done}/${arr.length} complete`;renderTasks("#taskList",$("#taskFilter").value);$("#dayTimeline").innerHTML=arr.length?arr.map(t=>`<div class="timeline-row"><span class="timeline-dot ${t.done?"done":""}"></span><div><b>${taskIcon(t.kind)} ${esc(t.title)}</b><small>${t.time||"Flexible"} • ${t.done?"Completed":"Pending"}</small></div></div>`).join(""):`<div class="empty">Add tasks to create your timeline.</div>`}
+function renderPlanner(){
+  renderSubjectChecklist();const arr=data.tasks.filter(t=>t.date===todayISO()),done=arr.filter(t=>t.done).length;$("#taskSummary").textContent=`${done}/${arr.length} complete`;renderTasks("#taskList",$("#taskFilter").value);$("#dayTimeline").innerHTML=arr.length?arr.map(t=>`<div class="timeline-row"><span class="timeline-dot ${t.done?"done":""}"></span><div><b>${taskIcon(t.kind)} ${esc(t.title)}</b><small>${t.time||"Flexible"} • ${t.done?"Completed":"Pending"}</small></div></div>`).join(""):`<div class="empty">Add tasks to create your timeline.</div>`}
 $("#taskFilter").onchange=renderPlanner;
 function quickAdd(kind){openModal("Add "+kind,`<form id="quickForm" class="form-grid"><label>Task title<input id="qt" required value="${kind} — "></label><label>Subject<select id="qs"><option>Physics</option><option>Chemistry</option><option>Maths</option><option>Boards</option><option>Other</option></select></label><label>Time<input id="qtime" type="time"></label><button class="primary wide">Add to Today</button></form>`);$("#quickForm").onsubmit=e=>{e.preventDefault();data.tasks.push({id:uid(),date:todayISO(),kind,title:$("#qt").value,subject:$("#qs").value,time:$("#qtime").value,done:false});closeModal();save();toast("Task added")}}
 $("#addTaskBtn").onclick=()=>quickAdd("Other");$("#quickTasks").onclick=e=>{let b=e.target.closest("[data-kind]");if(b)quickAdd(b.dataset.kind)};
@@ -125,6 +160,32 @@ document.addEventListener("submit",e=>{
 
 $("#exportBtn").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}));a.download="jee-tracker-backup.json";a.click();toast("Backup downloaded")};
 $("#importBtn").onclick=()=>$("#importFile").click();$("#importFile").onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{data=JSON.parse(r.result);save();toast("Backup imported")}catch{toast("Invalid backup")}};r.readAsText(f)};
+
+function buildPrintReport(){
+ ensureChecks();
+ const d=data.subjectChecks[todayISO()];
+ const rows=CHECK_SUBJECTS.map(s=>`<tr><td><b>${esc(s)}</b></td>${CHECK_ITEMS.map(k=>`<td style="text-align:center">${d[s][k]?"☑":"☐"}</td>`).join("")}</tr>`).join("");
+ const chaptersDone=data.chapters.filter(c=>["Done","Revised","Mastered"].includes(c.status)).length;
+ const totalHours=data.daily.reduce((n,x)=>n+Number(x.hours||0),0);
+ const recent=data.tests.slice(-8).reverse();
+ const tests=recent.length?`<table class="print-table"><tr><th>Test</th><th>Date</th><th>Exam</th><th>Score</th><th>Accuracy</th></tr>${recent.map(t=>`<tr><td>${esc(t.name)}</td><td>${esc(t.date)}</td><td>${esc(t.exam)}</td><td>${t.score}/${t.total}</td><td>${t.accuracy}%</td></tr>`).join("")}</table>`:"<p>No mock tests logged yet.</p>";
+ const pending=data.chapters.filter(c=>c.priority==="High" && c.status!=="Mastered").slice(0,12);
+ const backlog=pending.length?`<ul>${pending.map(c=>`<li>${esc(c.subject)} — ${esc(c.name)} (${esc(c.status)})</li>`).join("")}</ul>`:"<p>No high-priority backlog.</p>";
+ $("#printReport").innerHTML=`<h1 class="print-title">JEE Preparation Report</h1>
+ <div class="print-subtitle"><b>${esc(data.profile.name||"Student")}</b> • ${esc(data.profile.exam||"JEE Main + Advanced")} • ${esc(data.profile.attempt||"")}</div>
+ <div class="print-section"><h3>Today — Daily Subject Checklist</h3><table class="print-table"><tr><th>Subject</th>${CHECK_ITEMS.map(k=>`<th>${k}</th>`).join("")}</tr>${rows}</table></div>
+ <div class="print-section"><h3>Preparation Snapshot</h3><table class="print-table"><tr><th>JEE Syllabus Completed</th><td>${chaptersDone}/${data.chapters.length}</td><th>Total Study Hours</th><td>${totalHours.toFixed(2)}</td></tr><tr><th>PYQ Records</th><td>${data.pyqs.length}</td><th>Mock Tests</th><td>${data.tests.length}</td></tr><tr><th>Revision Items</th><td>${data.revisions.length}</td><th>Mistakes Logged</th><td>${data.mistakes.length}</td></tr></table></div>
+ <div class="print-section"><h3>Recent Mock Tests</h3>${tests}</div>
+ <div class="print-section"><h3>High Priority Backlog</h3>${backlog}</div>
+ <div class="print-footer">All rights reserved © Naresh Kuntal • Generated from JEE Tracker</div>`;
+}
+function printProgress(){
+ buildPrintReport(); setTimeout(()=>window.print(),50);
+}
+$("#printBtn").onclick=printProgress;
+$("#printSideBtn").onclick=printProgress;
+$("#printPlannerBtn").onclick=printProgress;
+
 $("#resetBtn").onclick=()=>{if(confirm("Reset ALL tracker data? This cannot be undone.")){localStorage.removeItem(KEY);location.reload()}};
 
 let timer={sec:25*60,running:false,mode:"Focus session",id:null};
